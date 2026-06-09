@@ -173,10 +173,10 @@ function Hero() {
 
       {/* ── 메인 콘텐츠 ── */}
       <div className="relative z-10 mx-auto w-full max-w-container px-4 py-20 md:px-10 lg:px-20">
-        <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-16">
 
           {/* 좌측 텍스트 */}
-          <div className="w-full lg:max-w-xl xl:max-w-2xl">
+          <div className="w-full lg:flex-1">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold text-white/80 backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
               병의원 디지털 마케팅 전문 에이전시
