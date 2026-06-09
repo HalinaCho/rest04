@@ -27,11 +27,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      <nav
-        className="bg-white dark:bg-slate-900 border-b border-neutral-100 dark:border-slate-800 transition-colors duration-300"
-        onMouseLeave={() => setHovered(null)}
-      >
-        <div className="mx-auto flex h-18 max-w-container items-center justify-between px-4 md:px-10 lg:px-20 h-[72px]">
+      <nav className="bg-white dark:bg-slate-900 border-b border-neutral-100 dark:border-slate-800 transition-colors duration-300">
+        <div className="mx-auto flex h-[72px] max-w-container items-center justify-between px-4 md:px-10 lg:px-20">
           {/* 로고 */}
           <Link to="/" className="flex items-center gap-2">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white font-extrabold text-lg">M</span>
@@ -48,8 +45,9 @@ export default function Header() {
             {nav.map((item) => (
               <li
                 key={item.label}
-                className="group flex items-center"
+                className="relative flex items-center"
                 onMouseEnter={() => setHovered(item.label)}
+                onMouseLeave={() => setHovered(null)}
               >
                 <NavLink
                   to={item.to}
@@ -64,6 +62,30 @@ export default function Header() {
                 >
                   {item.label}
                 </NavLink>
+
+                {/* 각 탭 바로 아래 정렬되는 드롭다운 */}
+                <div
+                  className={[
+                    'absolute left-0 top-full z-50 pt-0 transition-all duration-150',
+                    hovered === item.label
+                      ? 'pointer-events-auto translate-y-0 opacity-100'
+                      : 'pointer-events-none -translate-y-1 opacity-0',
+                  ].join(' ')}
+                >
+                  <ul className="min-w-[160px] overflow-hidden rounded-b-xl border border-t-0 border-neutral-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg">
+                    {item.children.map((c) => (
+                      <li key={c.label + c.to}>
+                        <Link
+                          to={c.to}
+                          onClick={() => setHovered(null)}
+                          className="block whitespace-nowrap px-5 py-2.5 text-sm text-neutral-600 dark:text-slate-400 transition hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand dark:hover:text-brand-400"
+                        >
+                          {c.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </li>
             ))}
           </ul>
@@ -102,37 +124,6 @@ export default function Header() {
               <span className="h-0.5 w-6 bg-neutral-700 dark:bg-slate-300 transition-all" />
               <span className="h-0.5 w-4 bg-neutral-700 dark:bg-slate-300 transition-all" />
             </button>
-          </div>
-        </div>
-
-        {/* 데스크탑 메가 서브메뉴 */}
-        <div
-          className={[
-            'hidden overflow-hidden border-b border-neutral-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-200 lg:block',
-            hovered ? 'max-h-48 opacity-100' : 'max-h-0 border-b-0 opacity-0',
-          ].join(' ')}
-        >
-          <div className="mx-auto flex max-w-container justify-end px-20">
-            {nav.map((item) => (
-              <ul
-                key={item.label}
-                className="flex w-40 flex-col gap-2 py-5"
-                onMouseEnter={() => setHovered(item.label)}
-              >
-                {hovered === item.label &&
-                  item.children.map((c) => (
-                    <li key={c.label + c.to}>
-                      <Link
-                        to={c.to}
-                        onClick={() => setHovered(null)}
-                        className="block text-center text-sm text-neutral-600 dark:text-slate-400 transition hover:font-semibold hover:text-brand dark:hover:text-brand-400"
-                      >
-                        {c.label}
-                      </Link>
-                    </li>
-                  ))}
-              </ul>
-            ))}
           </div>
         </div>
       </nav>
