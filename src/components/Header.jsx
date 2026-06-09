@@ -28,9 +28,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full">
       <nav className="bg-white dark:bg-slate-900 border-b border-neutral-100 dark:border-slate-800 transition-colors duration-300">
-        <div className="mx-auto flex h-[72px] max-w-container items-center justify-between px-4 md:px-10 lg:px-20">
+        <div className="mx-auto flex h-[72px] max-w-container items-stretch justify-between px-4 md:px-10 lg:px-20">
           {/* 로고 */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 self-center">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white font-extrabold text-lg">M</span>
             <span className="text-xl font-extrabold tracking-tight text-brand dark:text-brand-300">
               {company.name}
@@ -41,7 +41,7 @@ export default function Header() {
           </Link>
 
           {/* 데스크탑 메뉴 */}
-          <ul className="hidden items-stretch lg:flex">
+          <ul className="hidden lg:flex">
             {nav.map((item) => (
               <li
                 key={item.label}
@@ -53,7 +53,7 @@ export default function Header() {
                   to={item.to}
                   className={({ isActive }) =>
                     [
-                      'px-5 py-6 text-sm font-semibold transition-colors whitespace-nowrap',
+                      'flex h-full items-center px-5 text-sm font-semibold transition-colors whitespace-nowrap',
                       isActive
                         ? 'text-brand dark:text-brand-400'
                         : 'text-neutral-700 dark:text-slate-300 hover:text-brand dark:hover:text-brand-400',
@@ -63,16 +63,16 @@ export default function Header() {
                   {item.label}
                 </NavLink>
 
-                {/* 각 탭 바로 아래 정렬되는 드롭다운 */}
+                {/* 해당 탭 바로 아래 정렬 드롭다운 */}
                 <div
                   className={[
-                    'absolute left-0 top-full z-50 pt-0 transition-all duration-150',
+                    'absolute left-0 top-full z-50 transition-all duration-150',
                     hovered === item.label
                       ? 'pointer-events-auto translate-y-0 opacity-100'
                       : 'pointer-events-none -translate-y-1 opacity-0',
                   ].join(' ')}
                 >
-                  <ul className="min-w-[160px] overflow-hidden rounded-b-xl border border-t-0 border-neutral-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg">
+                  <ul className="min-w-[160px] overflow-hidden rounded-b-xl border border-t-0 border-neutral-100 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-lg">
                     {item.children.map((c) => (
                       <li key={c.label + c.to}>
                         <Link
@@ -91,7 +91,7 @@ export default function Header() {
           </ul>
 
           {/* 우측 버튼 영역 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-center">
             {/* 다크모드 토글 */}
             <button
               type="button"
