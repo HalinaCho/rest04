@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-sans text-neutral-900 antialiased bg-white transition-colors duration-300;
+  }
+  html.dark body {
+    @apply text-slate-100 bg-slate-950;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 font-bold text-white transition hover:bg-brand-900 active:scale-95;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 rounded-full border-2 border-brand px-7 py-3.5 font-bold text-brand transition hover:bg-brand hover:text-white active:scale-95;
+  }
+  .btn-accent {
+    @apply inline-flex items-center gap-2 rounded-full bg-accent px-7 py-3.5 font-bold text-white transition hover:bg-accent-dark active:scale-95;
+  }
+  .section-x {
+    @apply px-4 md:px-10 lg:px-24 xl:px-40;
+  }
+  .card {
+    @apply rounded-2xl bg-white shadow-sm border border-neutral-100 dark:bg-slate-800 dark:border-slate-700;
+  }
+  .section-title {
+    @apply text-3xl font-extrabold text-neutral-900 dark:text-white md:text-4xl lg:text-5xl;
+  }
+  .section-subtitle {
+    @apply text-base font-medium text-neutral-500 dark:text-slate-400 md:text-lg;
+  }
+  .tag {
+    @apply inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand dark:bg-brand-950 dark:text-brand-300;
+  }
+}
