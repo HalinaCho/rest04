@@ -44,10 +44,17 @@ export default {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        floatY: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-14px)' },
+        },
       },
       animation: {
         fadeInUp: 'fadeInUp 0.6s ease both',
         fadeIn: 'fadeIn 0.8s ease both',
+        'float-slow': 'floatY 6s ease-in-out infinite',
+        'float-mid': 'floatY 4s ease-in-out infinite',
+        'float-fast': 'floatY 3s ease-in-out infinite',
       },
     },
   },

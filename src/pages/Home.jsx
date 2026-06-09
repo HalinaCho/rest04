@@ -25,6 +25,86 @@ const slides = [
   },
 ]
 
+// 우측 대시보드 — 환자 성장 미니 차트
+function DashboardMockup() {
+  const data = [45, 68, 102, 148, 198, 258, 320]
+  const w = 260
+  const h = 80
+  const max = Math.max(...data)
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w
+    const y = h - (v / max) * h * 0.85 - 4
+    return [x, y]
+  })
+  const polyline = pts.map((p) => p.join(',')).join(' ')
+  const area = [
+    `M ${pts[0][0]},${h}`,
+    ...pts.map((p) => `L ${p[0]},${p[1]}`),
+    `L ${pts[pts.length - 1][0]},${h}`,
+    'Z',
+  ].join(' ')
+
+  return (
+    <div className="hidden lg:flex flex-col gap-4 w-80 xl:w-96">
+      {/* 성과 차트 카드 */}
+      <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-md shadow-2xl">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-xs font-bold text-white/60">신규 환자 월별 추이</span>
+          <span className="rounded-full bg-success/30 px-2.5 py-0.5 text-xs font-extrabold text-success">▲ 287%</span>
+        </div>
+        <svg viewBox={`0 0 ${w} ${h}`} className="w-full" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="heroChartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={area} fill="url(#heroChartGrad)" />
+          <polyline points={polyline} fill="none" stroke="#22d3ee" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          {pts.map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r={i === pts.length - 1 ? 4.5 : 2.5} fill="#22d3ee" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+          ))}
+        </svg>
+        <div className="mt-3 flex justify-between text-xs text-white/40">
+          <span>1개월</span>
+          <span>6개월</span>
+        </div>
+      </div>
+
+      {/* 수치 카드 3개 */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { num: '287%', label: '평균 환자\n증가율', color: 'from-brand-700 to-brand' },
+          { num: '350+', label: '파트너\n병의원', color: 'from-point-dark to-point' },
+          { num: '98%', label: '고객사\n만족도', color: 'from-amber-600 to-accent' },
+        ].map((c) => (
+          <div key={c.label} className={['rounded-xl bg-gradient-to-br p-4 text-center shadow-lg', c.color].join(' ')}>
+            <div className="text-xl font-extrabold text-white xl:text-2xl">{c.num}</div>
+            <div className="mt-1 whitespace-pre-line text-xs font-medium text-white/70 leading-4">{c.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 최근 성과 알림 카드 */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+        <p className="mb-2 text-xs font-bold text-white/50 uppercase tracking-widest">최근 성과</p>
+        {[
+          { clinic: '강남 K피부과', result: '신환 +183%', icon: '📈' },
+          { clinic: '서울 W치과', result: '매출 +220%', icon: '💰' },
+        ].map((r) => (
+          <div key={r.clinic} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
+            <div className="flex items-center gap-2">
+              <span className="text-base">{r.icon}</span>
+              <span className="text-xs font-semibold text-white/80">{r.clinic}</span>
+            </div>
+            <span className="text-xs font-extrabold text-success">{r.result}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Hero() {
   const [idx, setIdx] = useState(0)
   const [animKey, setAnimKey] = useState(0)
@@ -45,84 +125,115 @@ function Hero() {
   const s = slides[idx]
 
   return (
-    <section className="relative flex min-h-[calc(100vh-72px)] items-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand">
-      {/* 배경 장식 */}
+    <section className="relative flex min-h-[calc(100vh-72px)] items-center overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand pb-16">
+
+      {/* ── 배경 레이어 ── */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-point/10 blur-3xl" />
-        <div className="absolute -left-20 bottom-0 h-[400px] w-[400px] rounded-full bg-accent/10 blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(255,255,255,0.15) 60px), repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(255,255,255,0.15) 60px)',
-          }}
-        />
-      </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-container px-4 py-20 md:px-10 lg:px-20">
-        <div className="max-w-3xl">
-          {/* 뱃지 */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold text-white/80 backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-            병의원 디지털 마케팅 전문 에이전시
-          </div>
+        {/* 대형 글로우 서클 */}
+        <div className="absolute -right-40 -top-40 h-[700px] w-[700px] rounded-full bg-point/20 blur-3xl" />
+        <div className="absolute -left-20 bottom-10 h-[500px] w-[500px] rounded-full bg-accent/15 blur-3xl" />
+        <div className="absolute left-[45%] top-[20%] h-[350px] w-[350px] rounded-full bg-brand-400/10 blur-3xl" />
 
-          {/* 헤드라인 */}
-          <h1
-            key={animKey}
-            className="mb-5 whitespace-pre-line text-5xl font-extrabold leading-tight text-white animate-fadeInUp md:text-6xl lg:text-7xl"
-          >
-            {s.headline}
-          </h1>
+        {/* SVG 의료 십자(+) 반복 패턴 */}
+        <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="medCross" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+              <rect x="35" y="27" width="10" height="26" fill="white" rx="2" opacity="0.035" />
+              <rect x="27" y="35" width="26" height="10" fill="white" rx="2" opacity="0.035" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#medCross)" />
+        </svg>
 
-          <p
-            key={animKey + 'sub'}
-            className="mb-10 max-w-xl text-lg leading-8 text-white/70 animate-fadeIn"
-          >
-            {s.sub}
-          </p>
-
-          <div className="flex flex-wrap gap-4">
-            <Link to={s.ctaTo} className="btn-accent text-base px-8 py-4">
-              {s.cta}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link to="/results" className="btn-outline border-white/40 text-white hover:bg-white hover:text-brand text-base px-8 py-4">
-              성과 보기
-            </Link>
-          </div>
-        </div>
-
-        {/* 인디케이터 */}
-        <div className="mt-14 flex items-center gap-3">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`슬라이드 ${i + 1}`}
-              onClick={() => { setIdx(i); setAnimKey((k) => k + 1) }}
-              className={['rounded-full transition-all', i === idx ? 'h-2 w-10 bg-accent' : 'h-2 w-2 bg-white/30 hover:bg-white/60'].join(' ')}
-            />
+        {/* 사선 띠 (빛줄기 효과) */}
+        <svg className="absolute inset-0 h-full w-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          {[0,1,2,3,4,5].map((i) => (
+            <rect key={i} x={-300 + i * 320} y="-10%" width="120" height="120%" fill="white"
+              transform={`skewX(-20) translate(${i * 20}, 0)`} />
           ))}
-          <button type="button" aria-label="이전" onClick={() => go(-1)} className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white hover:bg-white/10 transition">‹</button>
-          <button type="button" aria-label="다음" onClick={() => go(1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white hover:bg-white/10 transition">›</button>
+        </svg>
+
+        {/* 링 장식 */}
+        <div className="absolute -top-24 -right-24 h-[480px] w-[480px] rounded-full border border-white/[0.06]" />
+        <div className="absolute -top-12 -right-12 h-[360px] w-[360px] rounded-full border border-white/[0.05]" />
+        <div className="absolute bottom-20 left-[35%] h-[200px] w-[200px] rounded-full border border-white/[0.06]" />
+        <div className="absolute top-[20%] left-[20%] h-[120px] w-[120px] rounded-full border border-white/[0.04]" />
+
+        {/* 플로팅 파티클 */}
+        <div className="absolute top-[12%] left-[7%]  h-2.5 w-2.5 rounded-full bg-white/20 animate-float-slow" style={{ animationDelay: '0s' }} />
+        <div className="absolute top-[28%] left-[14%] h-1.5 w-1.5 rounded-full bg-accent/60 animate-float-mid"  style={{ animationDelay: '1s' }} />
+        <div className="absolute top-[55%] left-[4%]  h-2   w-2   rounded-full bg-white/15 animate-float-fast" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute top-[18%] left-[48%] h-2   w-2   rounded-full bg-point/50 animate-float-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[72%] left-[32%] h-3   w-3   rounded-full bg-white/10 animate-float-mid"  style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-[40%] left-[25%] h-1.5 w-1.5 rounded-full bg-accent/40 animate-float-fast" style={{ animationDelay: '0.8s' }} />
+        <div className="absolute top-[8%]  left-[60%] h-2   w-2   rounded-full bg-white/20 animate-float-mid"  style={{ animationDelay: '3s' }} />
+        <div className="absolute top-[80%] left-[58%] h-2.5 w-2.5 rounded-full bg-point/30 animate-float-slow" style={{ animationDelay: '2.5s' }} />
+      </div>
+
+      {/* ── 메인 콘텐츠 ── */}
+      <div className="relative z-10 mx-auto w-full max-w-container px-4 py-20 md:px-10 lg:px-20">
+        <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between">
+
+          {/* 좌측 텍스트 */}
+          <div className="w-full lg:max-w-xl xl:max-w-2xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold text-white/80 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+              병의원 디지털 마케팅 전문 에이전시
+            </div>
+
+            <h1
+              key={animKey}
+              className="mb-5 whitespace-pre-line text-5xl font-extrabold leading-tight text-white animate-fadeInUp md:text-6xl lg:text-7xl"
+            >
+              {s.headline}
+            </h1>
+
+            <p
+              key={animKey + 'sub'}
+              className="mb-10 max-w-xl text-lg leading-8 text-white/70 animate-fadeIn"
+            >
+              {s.sub}
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link to={s.ctaTo} className="btn-accent text-base px-8 py-4">
+                {s.cta}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+              <Link to="/results" className="btn-outline border-white/40 text-white hover:bg-white hover:text-brand text-base px-8 py-4">
+                성과 보기
+              </Link>
+            </div>
+
+            {/* 인디케이터 */}
+            <div className="mt-12 flex items-center gap-3">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`슬라이드 ${i + 1}`}
+                  onClick={() => { setIdx(i); setAnimKey((k) => k + 1) }}
+                  className={['rounded-full transition-all', i === idx ? 'h-2 w-10 bg-accent' : 'h-2 w-2 bg-white/30 hover:bg-white/60'].join(' ')}
+                />
+              ))}
+              <button type="button" aria-label="이전" onClick={() => go(-1)} className="ml-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white hover:bg-white/10 transition">‹</button>
+              <button type="button" aria-label="다음" onClick={() => go(1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white hover:bg-white/10 transition">›</button>
+            </div>
+          </div>
+
+          {/* 우측 대시보드 모형 */}
+          <DashboardMockup />
         </div>
       </div>
 
-      {/* 수치 플로팅 카드 (데스크탑) */}
-      <div className="absolute right-10 top-1/2 hidden -translate-y-1/2 flex-col gap-4 xl:flex">
-        {[
-          { num: '287%', label: '평균 환자 증가율', color: 'bg-brand text-white' },
-          { num: '350+', label: '파트너 병의원', color: 'bg-point text-white' },
-          { num: '98%', label: '고객사 만족도', color: 'bg-accent text-white' },
-        ].map((c) => (
-          <div key={c.label} className={['rounded-2xl px-6 py-4 backdrop-blur-sm shadow-xl', c.color].join(' ')}>
-            <div className="text-3xl font-extrabold">{c.num}</div>
-            <div className="mt-0.5 text-xs font-medium opacity-80">{c.label}</div>
-          </div>
-        ))}
+      {/* ── 하단 웨이브 구분선 ── */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 leading-none">
+        <svg viewBox="0 0 1440 72" className="block w-full" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,36 C240,72 480,0 720,36 C960,72 1200,0 1440,36 L1440,72 L0,72 Z" className="fill-white dark:fill-slate-950" />
+        </svg>
       </div>
     </section>
   )
