@@ -229,12 +229,6 @@ function Hero() {
         </div>
       </div>
 
-      {/* ── 하단 웨이브 구분선 ── */}
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 leading-none">
-        <svg viewBox="0 0 1440 72" className="block w-full" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,36 C240,72 480,0 720,36 C960,72 1200,0 1440,36 L1440,72 L0,72 Z" className="fill-white dark:fill-slate-900" />
-        </svg>
-      </div>
     </section>
   )
 }
