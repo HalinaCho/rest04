@@ -249,7 +249,7 @@ function KeyStats() {
   }
   return (
     <section className="bg-white dark:bg-slate-900 transition-colors">
-      <div className="mx-auto grid max-w-container grid-cols-2 divide-x divide-y divide-neutral-100 dark:divide-slate-800 md:grid-cols-4 md:divide-y-0">
+      <div className="mx-auto grid max-w-container grid-cols-2 divide-x divide-neutral-100 dark:divide-slate-800 md:grid-cols-4">
         {keyStats.map((s) => (
           <div key={s.label} className="flex flex-col items-center justify-center gap-1 px-6 py-10 text-center">
             <span className={['text-4xl font-extrabold md:text-5xl', colorMap[s.color] || 'text-brand'].join(' ')}>
