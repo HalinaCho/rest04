@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { nav, company } from '../data/site'
 import { useTheme } from './ThemeContext'
+import { useAuth } from '../contexts/AuthContext'
 
 function SunIcon() {
   return (
@@ -20,10 +21,31 @@ function MoonIcon() {
   )
 }
 
+function UserIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
+
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [hovered, setHovered] = useState(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { dark, toggle } = useTheme()
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSignOut = async () => {
+    await signOut()
+    setUserMenuOpen(false)
+    setMobileOpen(false)
+    navigate('/')
+  }
+
+  const displayName = user?.user_metadata?.username || user?.email?.split('@')[0] || '사용자'
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -63,7 +85,6 @@ export default function Header() {
                   {item.label}
                 </NavLink>
 
-                {/* 해당 탭 바로 아래 정렬 드롭다운 */}
                 <div
                   className={[
                     'absolute left-0 top-full z-50 transition-all duration-150',
@@ -101,6 +122,43 @@ export default function Header() {
             >
               {dark ? <SunIcon /> : <MoonIcon />}
             </button>
+
+            {user ? (
+              /* 로그인 상태: 유저 메뉴 */
+              <div className="relative hidden md:block">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  onBlur={() => setTimeout(() => setUserMenuOpen(false), 150)}
+                  className="flex items-center gap-2 rounded-full border border-neutral-200 dark:border-slate-700 px-3.5 py-2 text-sm font-semibold text-neutral-700 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800 transition"
+                >
+                  <UserIcon />
+                  <span className="max-w-[80px] truncate">{displayName}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-40 rounded-xl border border-neutral-100 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-lg">
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full px-4 py-2.5 text-left text-sm text-neutral-600 dark:text-slate-400 hover:bg-neutral-50 dark:hover:bg-slate-800 hover:text-red-500 dark:hover:text-red-400 transition"
+                    >
+                      로그아웃
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* 비로그인 상태: 로그인 버튼 */
+              <Link
+                to="/login"
+                className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-neutral-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-neutral-700 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800 transition"
+              >
+                <UserIcon />
+                로그인
+              </Link>
+            )}
 
             {/* 무료 상담 CTA (데스크탑) */}
             <Link
@@ -157,6 +215,29 @@ export default function Header() {
                 </button>
               </div>
             </div>
+
+            {/* 모바일 로그인 상태 */}
+            {user ? (
+              <div className="mb-4 flex items-center justify-between rounded-xl bg-neutral-50 dark:bg-slate-800 px-4 py-3">
+                <span className="text-sm font-semibold text-neutral-800 dark:text-white">{displayName}</span>
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm text-red-500 dark:text-red-400 font-semibold hover:underline"
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="mb-4 flex items-center justify-center gap-2 rounded-xl border border-neutral-200 dark:border-slate-700 py-2.5 text-sm font-semibold text-neutral-700 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800 transition"
+              >
+                <UserIcon />
+                로그인 / 회원가입
+              </Link>
+            )}
+
             <ul className="flex flex-col gap-1">
               {nav.map((item) => (
                 <li key={item.label} className="border-b border-neutral-100 dark:border-slate-800 pb-2">

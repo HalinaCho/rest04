@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
@@ -10,6 +10,21 @@ import Services from './pages/Services'
 import Results from './pages/Results'
 import Contact from './pages/Contact'
 import SimplePage from './pages/SimplePage'
+
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
+
+import BoardList from './pages/board/BoardList'
+import BoardDetail from './pages/board/BoardDetail'
+import BoardWrite from './pages/board/BoardWrite'
+
+const VALID_BOARDS = ['notice', 'free', 'qna']
+
+function BoardListRouter() {
+  const { boardType } = useParams()
+  if (!VALID_BOARDS.includes(boardType)) return <Navigate to="/board/notice" replace />
+  return <BoardList boardType={boardType} />
+}
 
 export default function App() {
   return (
@@ -33,6 +48,17 @@ export default function App() {
 
           {/* 문의하기 */}
           <Route path="/contact" element={<Contact />} />
+
+          {/* 인증 */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* 게시판 — :boardType이 write/:id/edit 보다 먼저 매칭되지 않도록 순서 주의 */}
+          <Route path="/board/:boardType/write" element={<BoardWrite />} />
+          <Route path="/board/:boardType/:id/edit" element={<BoardWrite />} />
+          <Route path="/board/:boardType/:id" element={<BoardDetail />} />
+          <Route path="/board/:boardType" element={<BoardListRouter />} />
+          <Route path="/board" element={<Navigate to="/board/notice" replace />} />
 
           {/* 기타 */}
           <Route path="/blog" element={<SimplePage title="블로그" />} />

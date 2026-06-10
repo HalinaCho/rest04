@@ -62,6 +62,15 @@ export const nav = [
     ],
   },
   {
+    label: '커뮤니티',
+    to: '/board/notice',
+    children: [
+      { label: '공지게시판', to: '/board/notice' },
+      { label: '자유게시판', to: '/board/free' },
+      { label: 'QnA 게시판', to: '/board/qna' },
+    ],
+  },
+  {
     label: '문의하기',
     to: '/contact',
     children: [
