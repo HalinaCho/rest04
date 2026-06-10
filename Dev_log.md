@@ -1,7 +1,7 @@
 # MediOn — 병의원 온라인 마케팅 대행 사이트 개발일지
 
 > **프로젝트**: rest04 · React + Vite + Tailwind CSS  
-> **기간**: 2026-06-09  
+> **기간**: 2026-06-09 ~ 2026-06-10  
 > **참조**: [rest03](https://github.com/HalinaCho/rest03) 구조 및 컴포넌트 패턴 참고  
 > **배포**: GitHub Pages (`/rest04/`)
 
@@ -180,3 +180,148 @@ npx gh-pages -d dist
 - [ ] 구글 애널리틱스 이벤트 트래킹 추가
 - [ ] 개인정보처리방침 / 이용약관 실제 내용 작성
 - [ ] 네이버 / 카카오 채널 연동
+
+---
+
+## 10. 2026-06-10 개발일지 — Supabase 연동 · 로그인 · 게시판
+
+### 10-1. 개요
+
+기존 마케팅 소개 사이트에 **회원 인증**과 **커뮤니티 게시판** 기능을 추가했다.  
+백엔드는 별도 서버 없이 **Supabase**(BaaS)로 DB·Auth·RLS를 모두 처리한다.
+
+---
+
+### 10-2. 추가된 기술 스택
+
+| 구분 | 기술 |
+|------|------|
+| 백엔드 / DB | Supabase (PostgreSQL + Auth + RLS) |
+| 인증 | Supabase Auth — 이메일/비밀번호 + 카카오 OAuth 2.0 |
+| 클라이언트 | `@supabase/supabase-js` v2 |
+| 환경변수 | Vite `.env.local` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) |
+
+---
+
+### 10-3. Supabase DB 설계
+
+#### 테이블
+
+| 테이블 | 역할 |
+|--------|------|
+| `rest04_posts` | 게시글 (board_type: notice / free / qna) |
+| `rest04_comments` | 댓글 (post_id FK) |
+| `rest04_profiles` | 사용자 역할 (role: user / admin) |
+
+#### 테이블 접두어 전략
+- 모든 테이블명에 `rest04_` 접두어 사용 → 동일 Supabase 프로젝트 내 타 서비스 테이블과 충돌 방지
+
+#### RLS (Row Level Security) 정책
+
+| 테이블 | SELECT | INSERT | UPDATE | DELETE |
+|--------|--------|--------|--------|--------|
+| posts | 전체 공개 | 로그인 사용자 | 본인 또는 관리자 | 본인 또는 관리자 |
+| comments | 전체 공개 | 로그인 사용자 | 본인 또는 관리자 | 본인 또는 관리자 |
+| profiles | 전체 공개 | 본인 | 본인 | — |
+
+#### 주요 DB 함수
+
+```sql
+-- 조회수 증가 (RLS 우회, SECURITY DEFINER)
+CREATE FUNCTION rest04_increment_views(p_post_id bigint) ...
+
+-- 관리자 여부 확인
+CREATE FUNCTION rest04_is_admin() RETURNS boolean ...
+
+-- 신규 가입 시 프로필 자동 생성 트리거
+CREATE TRIGGER rest04_on_auth_user_created ...
+```
+
+---
+
+### 10-4. 인증 구현
+
+#### AuthContext (`src/contexts/AuthContext.jsx`)
+- `user`, `role`, `isAdmin`, `loading` 상태 전역 제공
+- `supabase.auth.onAuthStateChange`로 세션 실시간 감지
+- 로그인 시 `rest04_profiles`에서 역할(role) 자동 조회
+
+#### 제공 메서드
+
+| 메서드 | 설명 |
+|--------|------|
+| `signUp(email, pw, username)` | 이메일 회원가입 (이메일 인증 필요) |
+| `signIn(email, pw)` | 이메일 로그인 |
+| `signInWithKakao()` | 카카오 OAuth 로그인 |
+| `signOut()` | 로그아웃 |
+
+---
+
+### 10-5. 게시판 구현
+
+#### 3종 게시판
+
+| 게시판 | 경로 | 글쓰기 권한 |
+|--------|------|------------|
+| 공지게시판 | `/board/notice` | 관리자만 |
+| 자유게시판 | `/board/free` | 로그인 사용자 |
+| QnA 게시판 | `/board/qna` | 로그인 사용자 |
+
+#### 공통 기능
+- 목록: 검색(제목·작성자), 페이지네이션(15개/페이지), 날짜 포맷(방금 전 / 시:분 / 날짜)
+- 상세: 조회수 자동 증가, 댓글 CRUD, 수정·삭제(본인/관리자)
+- 작성/수정: 제목·내용 유효성 검사
+
+#### 관리자 전용 기능
+- 공지게시판 글쓰기
+- 게시글 상단 고정(📌) 토글
+- 모든 게시글·댓글 삭제
+- 헤더에 **관리자** 배지 표시
+
+---
+
+### 10-6. 카카오 로그인 트러블슈팅
+
+#### 문제 1 — KOE205: Web 플랫폼 미등록
+- **원인**: 카카오 Developer Console에 Web 플랫폼 등록 없이 OAuth 요청
+- **해결**: `https://halinacho.github.io` 도메인을 Web 플랫폼에 등록
+
+#### 문제 2 — KOE205: 동의항목 미설정 (`account_email`)
+- **원인**: Supabase GoTrue가 서버 측에서 `account_email` 스코프를 자동 추가하지만, 개인 앱은 이메일 권한 없음
+- **시도**: 클라이언트 `scopes` 옵션으로 이메일 제거 → 효과 없음 (서버 측 하드코딩)
+- **해결**: 카카오 **비즈앱 전환** 후 `account_email` 동의항목을 선택 동의로 활성화
+
+#### 카카오 설정 최종 체크리스트
+- [x] Web 플랫폼 등록 (`https://halinacho.github.io`)
+- [x] 카카오 로그인 활성화
+- [x] Redirect URI: `https://dyfrvjqkbjmvrxfeyhfu.supabase.co/auth/v1/callback`
+- [x] 비즈앱 전환 완료
+- [x] 동의항목: 닉네임(필수), 프로필 사진(선택), 카카오계정 이메일(선택)
+- [x] Client Secret 활성화 상태 확인
+- [x] Supabase Auth → URL Configuration: Site URL 및 Redirect URL 등록
+
+---
+
+### 10-7. 폴더 구조 변경사항
+
+```
+rest04/
+├── src/
+│   ├── contexts/
+│   │   └── AuthContext.jsx        # 신규 — 인증 전역 상태
+│   ├── lib/
+│   │   └── supabase.js            # 신규 — Supabase 클라이언트
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   ├── Login.jsx          # 신규 — 로그인
+│   │   │   └── Register.jsx       # 신규 — 회원가입
+│   │   └── board/
+│   │       ├── BoardList.jsx      # 신규 — 게시판 목록
+│   │       ├── BoardDetail.jsx    # 신규 — 게시글 상세 + 댓글
+│   │       └── BoardWrite.jsx     # 신규 — 글쓰기 / 수정
+│   └── components/
+│       └── Header.jsx             # 수정 — 로그인 상태 + 관리자 배지 + 커뮤니티 메뉴
+├── supabase/
+│   ├── supabase_setup.sql         # 신규 — 기본 테이블 + RLS 정책
+│   └── supabase_roles.sql         # 신규 — 역할(profiles) 테이블 + 관리자 함수
+└── .env.local                     # 신규 — Supabase 연결 정보 (gitignore 처리)
