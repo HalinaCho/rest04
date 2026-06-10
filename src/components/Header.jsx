@@ -35,7 +35,7 @@ export default function Header() {
   const [hovered, setHovered] = useState(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { dark, toggle } = useTheme()
-  const { user, signOut } = useAuth()
+  const { user, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -134,6 +134,11 @@ export default function Header() {
                 >
                   <UserIcon />
                   <span className="max-w-[80px] truncate">{displayName}</span>
+                  {isAdmin && (
+                    <span className="rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 text-xs font-bold px-1.5 py-0.5">
+                      관리자
+                    </span>
+                  )}
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
@@ -219,7 +224,14 @@ export default function Header() {
             {/* 모바일 로그인 상태 */}
             {user ? (
               <div className="mb-4 flex items-center justify-between rounded-xl bg-neutral-50 dark:bg-slate-800 px-4 py-3">
-                <span className="text-sm font-semibold text-neutral-800 dark:text-white">{displayName}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-neutral-800 dark:text-white">{displayName}</span>
+                  {isAdmin && (
+                    <span className="rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 text-xs font-bold px-1.5 py-0.5">
+                      관리자
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleSignOut}
                   className="text-sm text-red-500 dark:text-red-400 font-semibold hover:underline"
