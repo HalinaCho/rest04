@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
       provider: 'kakao',
       options: {
         redirectTo: window.location.origin + window.location.pathname,
+        scopes: 'profile_nickname profile_image',
       },
     })
     if (error) throw error
