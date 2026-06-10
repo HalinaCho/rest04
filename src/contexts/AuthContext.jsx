@@ -5,15 +5,27 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [role, setRole] = useState('user')
   const [loading, setLoading] = useState(true)
+
+  const fetchRole = async (uid) => {
+    if (!uid) { setRole('user'); return }
+    const { data } = await supabase
+      .from('rest04_profiles')
+      .select('role')
+      .eq('id', uid)
+      .single()
+    setRole(data?.role ?? 'user')
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      setLoading(false)
+      fetchRole(session?.user?.id ?? null).finally(() => setLoading(false))
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      fetchRole(session?.user?.id ?? null)
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -51,7 +63,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithKakao, signOut }}>
+    <AuthContext.Provider value={{ user, role, isAdmin: role === 'admin', loading, signUp, signIn, signInWithKakao, signOut }}>
       {children}
     </AuthContext.Provider>
   )

@@ -12,7 +12,7 @@ const BOARD_META = {
 const PAGE_SIZE = 15
 
 export default function BoardList({ boardType }) {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [posts, setPosts] = useState([])
   const [total, setTotal] = useState(0)
@@ -21,6 +21,9 @@ export default function BoardList({ boardType }) {
   const [searchInput, setSearchInput] = useState('')
   const [loading, setLoading] = useState(true)
   const meta = BOARD_META[boardType]
+
+  // 공지게시판은 관리자만 글쓰기 가능
+  const canWrite = user && (boardType !== 'notice' || isAdmin)
 
   const fetchPosts = useCallback(async () => {
     setLoading(true)
@@ -77,6 +80,11 @@ export default function BoardList({ boardType }) {
           <div className="flex items-center gap-3 mb-1">
             <span className="text-2xl">{meta.icon}</span>
             <h1 className="text-2xl font-extrabold text-neutral-900 dark:text-white">{meta.label}</h1>
+            {boardType === 'notice' && (
+              <span className="rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand dark:text-brand-400 text-xs font-bold px-2.5 py-1">
+                관리자 전용 작성
+              </span>
+            )}
           </div>
           <p className="text-sm text-neutral-500 dark:text-slate-400">{meta.desc}</p>
         </div>
@@ -98,7 +106,7 @@ export default function BoardList({ boardType }) {
               검색
             </button>
           </form>
-          {user && (
+          {canWrite && (
             <Link
               to={`/board/${boardType}/write`}
               className="rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700 transition whitespace-nowrap"
@@ -110,7 +118,6 @@ export default function BoardList({ boardType }) {
 
         {/* 목록 */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-neutral-100 dark:border-slate-800 overflow-hidden shadow-sm">
-          {/* 목록 헤더 */}
           <div className="hidden md:grid grid-cols-[1fr_100px_80px_80px] border-b border-neutral-100 dark:border-slate-800 px-5 py-3 text-xs font-semibold text-neutral-400 dark:text-slate-500 uppercase tracking-wide">
             <span>제목</span>
             <span className="text-center">작성자</span>
@@ -196,7 +203,6 @@ export default function BoardList({ boardType }) {
           </div>
         )}
 
-        {/* 총 게시글 수 */}
         <p className="mt-3 text-center text-xs text-neutral-400 dark:text-slate-600">
           총 {total}개의 게시글
         </p>

@@ -7,7 +7,7 @@ const BOARD_LABEL = { notice: '공지게시판', free: '자유게시판', qna: '
 
 export default function BoardWrite() {
   const { boardType, id } = useParams()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
   const isEdit = Boolean(id)
   const [form, setForm] = useState({ title: '', content: '', is_pinned: false })
@@ -15,14 +15,14 @@ export default function BoardWrite() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
+    if (!user) { navigate('/login'); return }
+    // 공지게시판 글쓰기는 관리자만
+    if (boardType === 'notice' && !isAdmin) { navigate('/board/notice'); return }
+
     if (isEdit) {
       supabase.from('rest04_posts').select('*').eq('id', id).single().then(({ data }) => {
         if (data) {
-          if (data.author_id !== user.id) {
+          if (data.author_id !== user.id && !isAdmin) {
             navigate(`/board/${boardType}/${id}`)
             return
           }
@@ -30,7 +30,7 @@ export default function BoardWrite() {
         }
       })
     }
-  }, [user, id, isEdit])
+  }, [user, isAdmin, id, isEdit, boardType])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -44,7 +44,7 @@ export default function BoardWrite() {
     if (!form.content.trim()) { setError('내용을 입력하세요.'); return }
     setLoading(true)
 
-    const authorName = user.user_metadata?.username || user.email?.split('@')[0] || '익명'
+    const authorName = user.user_metadata?.username || user.user_metadata?.full_name || user.email?.split('@')[0] || '익명'
 
     if (isEdit) {
       const { error: err } = await supabase.from('rest04_posts').update({
@@ -73,9 +73,14 @@ export default function BoardWrite() {
   return (
     <div className="min-h-[calc(100vh-72px)] bg-neutral-50 dark:bg-slate-950 py-10 px-4">
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-xl font-extrabold text-neutral-900 dark:text-white mb-1">
-          {isEdit ? '글 수정' : '글쓰기'}
-        </h1>
+        <div className="flex items-center gap-3 mb-1">
+          <h1 className="text-xl font-extrabold text-neutral-900 dark:text-white">
+            {isEdit ? '글 수정' : '글쓰기'}
+          </h1>
+          {isAdmin && (
+            <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-bold px-2.5 py-1">관리자</span>
+          )}
+        </div>
         <p className="text-sm text-neutral-400 dark:text-slate-500 mb-6">{BOARD_LABEL[boardType]}</p>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-neutral-100 dark:border-slate-800 shadow-sm p-6">
@@ -111,7 +116,8 @@ export default function BoardWrite() {
               />
             </div>
 
-            {boardType === 'notice' && (
+            {/* 상단 고정 — 관리자만 표시 */}
+            {isAdmin && (
               <label className="flex items-center gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -120,7 +126,7 @@ export default function BoardWrite() {
                   onChange={handleChange}
                   className="h-4 w-4 rounded border-neutral-300 text-brand focus:ring-brand"
                 />
-                <span className="text-sm font-semibold text-neutral-700 dark:text-slate-300">상단 고정 공지</span>
+                <span className="text-sm font-semibold text-neutral-700 dark:text-slate-300">📌 상단 고정 공지</span>
               </label>
             )}
 

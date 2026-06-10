@@ -7,7 +7,7 @@ const BOARD_LABEL = { notice: '공지게시판', free: '자유게시판', qna: '
 
 export default function BoardDetail() {
   const { boardType, id } = useParams()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [post, setPost] = useState(null)
   const [comments, setComments] = useState([])
@@ -25,7 +25,7 @@ export default function BoardDetail() {
     setLoading(true)
     const { data } = await supabase.from('rest04_posts').select('*').eq('id', id).single()
     if (data) {
-      setPost({ ...data, views: data.views + 1 })
+      setPost(data)
       await supabase.rpc('rest04_increment_views', { p_post_id: Number(id) })
     } else {
       navigate(`/board/${boardType}`)
@@ -46,7 +46,7 @@ export default function BoardDetail() {
     e.preventDefault()
     if (!commentText.trim() || !user) return
     setSubmitting(true)
-    const authorName = user.user_metadata?.username || user.email?.split('@')[0] || '익명'
+    const authorName = user.user_metadata?.username || user.user_metadata?.full_name || user.email?.split('@')[0] || '익명'
     const { error } = await supabase.from('rest04_comments').insert({
       post_id: Number(id),
       author_id: user.id,
@@ -70,6 +70,11 @@ export default function BoardDetail() {
     navigate(`/board/${boardType}`)
   }
 
+  const handleTogglePin = async () => {
+    const { error } = await supabase.from('rest04_posts').update({ is_pinned: !post.is_pinned }).eq('id', id)
+    if (!error) setPost((p) => ({ ...p, is_pinned: !p.is_pinned }))
+  }
+
   const handleToggleAnswer = async () => {
     const { error } = await supabase.from('rest04_posts').update({ is_answered: !post.is_answered }).eq('id', id)
     if (!error) setPost((p) => ({ ...p, is_answered: !p.is_answered }))
@@ -91,6 +96,8 @@ export default function BoardDetail() {
   if (!post) return null
 
   const isAuthor = user && user.id === post.author_id
+  const canDelete = isAuthor || isAdmin
+  const canEdit = isAuthor
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-neutral-50 dark:bg-slate-950 py-10 px-4">
@@ -106,7 +113,6 @@ export default function BoardDetail() {
 
         {/* 본문 카드 */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-neutral-100 dark:border-slate-800 shadow-sm overflow-hidden mb-4">
-          {/* 제목 영역 */}
           <div className="px-6 pt-6 pb-4 border-b border-neutral-50 dark:border-slate-800">
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {post.is_pinned && (
@@ -117,6 +123,9 @@ export default function BoardDetail() {
                   {post.is_answered ? '답변완료' : '미답변'}
                 </span>
               )}
+              {isAdmin && (
+                <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-bold px-2.5 py-1">관리자</span>
+              )}
             </div>
             <h1 className="text-xl font-extrabold text-neutral-900 dark:text-white mb-3">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-400 dark:text-slate-500">
@@ -126,7 +135,6 @@ export default function BoardDetail() {
             </div>
           </div>
 
-          {/* 본문 */}
           <div className="px-6 py-8 min-h-[200px]">
             <div className="text-sm leading-relaxed text-neutral-700 dark:text-slate-300 whitespace-pre-wrap">
               {post.content}
@@ -141,8 +149,22 @@ export default function BoardDetail() {
             >
               ← 목록으로
             </Link>
-            <div className="flex gap-2">
-              {boardType === 'qna' && isAuthor && (
+            <div className="flex flex-wrap gap-2">
+              {/* 관리자 전용: 상단 고정 토글 */}
+              {isAdmin && (
+                <button
+                  onClick={handleTogglePin}
+                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                    post.is_pinned
+                      ? 'bg-brand-100 dark:bg-brand-900/30 text-brand dark:text-brand-400 hover:bg-brand-200'
+                      : 'border border-neutral-200 dark:border-slate-700 text-neutral-600 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {post.is_pinned ? '📌 고정 해제' : '📌 상단 고정'}
+                </button>
+              )}
+              {/* QnA 답변 상태 토글 — 작성자 또는 관리자 */}
+              {boardType === 'qna' && (isAuthor || isAdmin) && (
                 <button
                   onClick={handleToggleAnswer}
                   className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
@@ -154,39 +176,41 @@ export default function BoardDetail() {
                   {post.is_answered ? '미답변으로 변경' : '답변완료 표시'}
                 </button>
               )}
-              {isAuthor && (
-                <>
-                  <Link
-                    to={`/board/${boardType}/${id}/edit`}
-                    className="rounded-xl border border-neutral-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-neutral-600 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800 transition"
-                  >
-                    수정
-                  </Link>
-                  {deleteConfirm ? (
-                    <div className="flex gap-2 items-center">
-                      <span className="text-xs text-red-500">삭제하시겠습니까?</span>
-                      <button
-                        onClick={handleDeletePost}
-                        className="rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white hover:bg-red-600 transition"
-                      >
-                        확인
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(false)}
-                        className="rounded-xl border border-neutral-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-neutral-600 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800 transition"
-                      >
-                        취소
-                      </button>
-                    </div>
-                  ) : (
+              {/* 수정 — 본인만 */}
+              {canEdit && (
+                <Link
+                  to={`/board/${boardType}/${id}/edit`}
+                  className="rounded-xl border border-neutral-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-neutral-600 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800 transition"
+                >
+                  수정
+                </Link>
+              )}
+              {/* 삭제 — 본인 또는 관리자 */}
+              {canDelete && (
+                deleteConfirm ? (
+                  <div className="flex gap-2 items-center">
+                    <span className="text-xs text-red-500">삭제하시겠습니까?</span>
                     <button
-                      onClick={() => setDeleteConfirm(true)}
-                      className="rounded-xl border border-red-200 dark:border-red-800 px-4 py-2 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                      onClick={handleDeletePost}
+                      className="rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white hover:bg-red-600 transition"
                     >
-                      삭제
+                      확인
                     </button>
-                  )}
-                </>
+                    <button
+                      onClick={() => setDeleteConfirm(false)}
+                      className="rounded-xl border border-neutral-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-neutral-600 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800 transition"
+                    >
+                      취소
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setDeleteConfirm(true)}
+                    className="rounded-xl border border-red-200 dark:border-red-800 px-4 py-2 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                  >
+                    삭제
+                  </button>
+                )
               )}
             </div>
           </div>
@@ -212,7 +236,8 @@ export default function BoardDetail() {
                       </div>
                       <p className="text-sm text-neutral-700 dark:text-slate-300 whitespace-pre-wrap">{c.content}</p>
                     </div>
-                    {user && user.id === c.author_id && (
+                    {/* 댓글 삭제 — 본인 또는 관리자 */}
+                    {user && (user.id === c.author_id || isAdmin) && (
                       <button
                         onClick={() => handleDeleteComment(c.id)}
                         className="shrink-0 text-xs text-neutral-400 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition"
@@ -230,7 +255,6 @@ export default function BoardDetail() {
             </div>
           )}
 
-          {/* 댓글 입력 */}
           <div className="px-6 py-4 border-t border-neutral-50 dark:border-slate-800">
             {user ? (
               <form onSubmit={handleCommentSubmit} className="flex gap-3">
@@ -251,9 +275,7 @@ export default function BoardDetail() {
               </form>
             ) : (
               <p className="text-center text-sm text-neutral-400 dark:text-slate-500">
-                <Link to="/login" className="text-brand dark:text-brand-400 font-semibold hover:underline">
-                  로그인
-                </Link>
+                <Link to="/login" className="text-brand dark:text-brand-400 font-semibold hover:underline">로그인</Link>
                 하시면 댓글을 작성할 수 있습니다.
               </p>
             )}
